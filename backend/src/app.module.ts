@@ -11,6 +11,7 @@ import { ProductosModule } from './modules/productos/productos.module';
 import { VentasModule } from './modules/ventas/ventas.module';
 import { ReportesModule } from './modules/reportes/reportes.module';
 import { FacturacionModule } from './modules/facturacion/facturacion.module';
+import { SeedModule } from './modules/seed/seed.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { FacturacionModule } from './modules/facturacion/facturacion.module';
     VentasModule,
     ReportesModule,
     FacturacionModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

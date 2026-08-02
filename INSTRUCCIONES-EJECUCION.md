@@ -1,112 +1,50 @@
 # 🚀 Guía de Ejecución - Sistema POS Ferretería Bolivia
 
-## 📋 Requisitos
-- Node.js >= 18.0.0
-- npm >= 9.0.0  
-- PostgreSQL corriendo localmente
-- Puerto 3000 disponible (Backend)
-- Puerto 4200 disponible (Frontend)
+## ⚡ 1. MODO DESARROLLO (2-EN-1 con Recarga en Vivo / Hot Reload)
+
+Para modificar el código y ver los cambios al instante tanto en el Backend como en el Frontend sin andar haciendo `cd` manual:
+
+```powershell
+npm run all
+```
+*(O también `npm start`, `npm run dev` o haciendo doble clic en `dev.bat`)*
+
+### ¿Qué hace este comando?
+- ⚡ Ejecuta **NestJS Backend** en el puerto `3000` con recarga automática.
+- ⚡ Ejecuta **Angular Frontend** en el puerto `4200` con recarga automática.
+- 🎨 Muestra ambos logs unificados con etiquetas de colores (`[BACKEND]` y `[FRONTEND]`) en una sola terminal.
 
 ---
 
-## 🎯 Opción 1: Ejecutar TODO (Backend + Frontend)
+## 🐳 2. MODO DOCKER (Contenedores + Base de Datos Automatizada)
 
-### Desde la carpeta raíz:
 ```powershell
-npm start
-```
-
-Esto iniciará:
-- ✅ **Backend** en `http://localhost:3000`
-- ✅ **Frontend** en `http://localhost:4200`
-
----
-
-## 🎯 Opción 2: Ejecutar SEPARADO
-
-### Solo Backend
-```powershell
-npm run start:backend
-# O directamente:
-cd backend
-npm run start:dev
-```
-
-### Solo Frontend
-```powershell
-npm run start:frontend
-# O directamente:
-cd frontend
-npm start
+npm run docker:up
+# o directamente:
+docker-compose up --build -d
 ```
 
 ---
 
-## 🎯 Opción 3: Instalar todo de nuevo
+## 🔑 Usuarios y Contraseñas Simples para Pruebas
 
-Si falta instalar dependencias:
+Para facilitarte las pruebas, **la contraseña para TODOS los usuarios es simplemente: `123`**
 
-```powershell
-npm run install:all
-```
-
-Esto hará:
-1. `npm install` en raíz
-2. `npm install` en backend/
-3. `npm install` en frontend/
+| Rol | Email | Contraseña |
+| :--- | :--- | :--- |
+| 🛡️ **Administrador** | `admin@ferreteria.com` | `123` |
+| 👔 **Gerente** | `gerente@ferreteria.com` | `123` |
+| 🛒 **Vendedor** | `vendedor@ferreteria.com` | `123` |
+| 📦 **Almacenero** | `almacen@ferreteria.com` | `123` |
 
 ---
 
-## ✅ Verificar que está funcionando
+## 🌐 Puertos del Sistema
 
-Abre en tu navegador:
-- **Frontend**: `http://localhost:4200`
-- **Backend API**: `http://localhost:3000/api`
-
-### Credenciales de Prueba
-- **Email**: admin@ferreteria.com
-- **Contraseña**: Admin123
+- **Frontend Angular (Dev)**: `http://localhost:4200`
+- **Frontend Angular (Docker)**: `http://localhost:8080`
+- **Backend API (NestJS)**: `http://localhost:3000`
+- **pgAdmin (Base de Datos)**: `http://localhost:5050` (`admin@ferreteria.com` / `admin`)
 
 ---
-
-## 🔧 Troubleshooting
-
-### Error: "Cannot find module"
-```powershell
-npm run install:all
-```
-
-### Puertos ya en uso
-- Backend (3000): `netstat -ano | findstr :3000`
-- Frontend (4200): `netstat -ano | findstr :4200`
-
-### PostgreSQL no conecta
-Verifica que PostgreSQL está corriendo y la BD `ferreteria_pos` existe.
-
----
-
-## 📦 Comandos Disponibles
-
-| Comando | Descripción |
-|---------|-------------|
-| `npm start` | Ejecuta backend + frontend |
-| `npm run start:backend` | Solo backend |
-| `npm run start:frontend` | Solo frontend |
-| `npm run build` | Build production de ambos |
-| `npm run build:backend` | Build backend |
-| `npm run build:frontend` | Build frontend |
-| `npm test` | Ejecuta tests |
-| `npm run install:all` | Instala dependencias |
-
----
-
-## 🇧🇴 Sistema Localizado para Bolivia
-
-- 💰 Moneda: **Bs. (Bolivianos)**
-- 🇧🇴 País: **Bolivia**
-- 🕐 Zona: **America/La_Paz**
-- 📱 Idioma: **Español (es-BO)**
-
----
-
 **POS Ferretería Bolivia v1.0** | 2026

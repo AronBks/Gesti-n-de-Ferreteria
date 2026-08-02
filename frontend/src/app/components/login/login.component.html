@@ -62,7 +62,6 @@
                 [class.is-invalid]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
                 [class.is-valid]="loginForm.get('email')?.touched && loginForm.get('email')?.valid"
                 placeholder="tu@correo.com"
-                [disabled]="loading"
               />
               <span class="input-icon" *ngIf="loginForm.get('email')?.valid && loginForm.get('email')?.touched">
                 <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -96,7 +95,6 @@
                 [class.is-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
                 [class.is-valid]="loginForm.get('password')?.touched && loginForm.get('password')?.valid"
                 placeholder="••••••••"
-                [disabled]="loading"
               />
               <button
                 type="button"

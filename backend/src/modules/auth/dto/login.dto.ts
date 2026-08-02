@@ -5,6 +5,6 @@ export class LoginDto {
   email: string;
 
   @IsNotEmpty({ message: 'La contraseña es requerida' })
-  @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
+  @MinLength(1, { message: 'La contraseña es requerida' })
   password: string;
 }

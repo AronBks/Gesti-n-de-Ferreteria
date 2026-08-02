@@ -4,10 +4,16 @@
   "description": "Sistema POS Ferretería Bolivia - NestJS Backend + Angular Frontend",
   "private": true,
   "scripts": {
-    "start": "npm run start:all",
-    "start:all": "npm run start:backend & npm run start:frontend",
+    "all": "npm run dev",
+    "start": "npm run dev",
+    "start:all": "npm run dev",
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"cyan.bold,magenta.bold\" --kill-others-on-fail \"npm run start:backend\" \"npm run start:frontend\"",
     "start:backend": "cd backend && npm run start:dev",
     "start:frontend": "cd frontend && npm start",
+    "docker:up": "docker-compose up --build -d",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up --build",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
     "build": "npm run build:backend && npm run build:frontend",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
@@ -33,6 +39,7 @@
     "bcrypt": "^6.0.0"
   },
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0"
+    "@types/bcrypt": "^6.0.0",
+    "concurrently": "^10.0.4"
   }
 }

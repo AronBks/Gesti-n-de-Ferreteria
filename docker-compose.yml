@@ -1,0 +1,72 @@
+services:
+  # Base de Datos PostgreSQL con Inicialización Automática de Datos
+  postgres:
+    image: postgres:16-alpine
+    container_name: ferreteria_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-ferreteria_pos}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-ferreteria_pos}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # NestJS Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ferreteria_backend
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-ferreteria_pos}
+      JWT_SECRET: ${JWT_SECRET:-ferreteria_pos_secret_key_2026_super_seguro}
+      JWT_EXPIRATION: 24h
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Angular Frontend Service (Nginx) - Acceso en http://localhost:8080
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ferreteria_frontend
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+  # Administrador Visual de BD (pgAdmin 4) - Opcional en http://localhost:5050
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ferreteria_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@ferreteria.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+    driver: local

@@ -18,7 +18,8 @@ export class LoginComponent implements OnInit {
   errorMessage: string = '';
   showPassword: boolean = false;
   suggestions = [
-    { email: 'admin@ferreteria.com', password: 'Admin123' }
+    { email: 'admin@ferreteria.com', password: '123' },
+    { email: 'vendedor@ferreteria.com', password: '123' }
   ];
 
   constructor(
@@ -44,7 +45,7 @@ export class LoginComponent implements OnInit {
   private initializeForm(): void {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      password: ['', [Validators.required, Validators.minLength(1)]]
     });
   }
 
@@ -71,8 +72,8 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.loginForm.value).subscribe({
       next: (response) => {
         this.loading = false;
-        // Redirección inteligente basada en el rol del usuario
-        const role = response.user?.rol as Role;
+        const user = response.user || (response as any).usuario;
+        const role = (user?.rol as Role) || Role.ADMIN;
         const targetRoute = this.authService.getDefaultRouteForRole(role);
         this.router.navigate([targetRoute]);
       },
@@ -93,7 +94,6 @@ export class LoginComponent implements OnInit {
   getPasswordError(): string {
     const control = this.loginForm.get('password');
     if (control?.hasError('required')) return 'La contraseña es requerida';
-    if (control?.hasError('minlength')) return 'Mínimo 6 caracteres';
     return '';
   }
 }

@@ -1,71 +1,79 @@
 -- ============================================================================
--- FERRETERIA POS - SCHEMA INICIAL
--- Base de Datos: PostgreSQL
--- Descripción: Estructura de tablas para Sistema de Punto de Venta
+-- FERRETERIA POS - SCHEMA PRINCIPAL DE BASE DE DATOS
+-- Base de Datos: PostgreSQL 16+
+-- Descripción: Tablas, tipos ENUM, índices y constraints para el sistema POS
 -- ============================================================================
 
--- Crear UUID extension
+-- Habilitar extensión UUID
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Crear ENUM types
-CREATE TYPE user_role AS ENUM (
-  'ADMIN',
-  'GERENTE',
-  'VENDEDOR',
-  'ALMACENERO',
-  'AUDITOR'
-);
+-- ============================================================================
+-- TIPOS ENUM DE DOMINIO
+-- ============================================================================
 
-CREATE TYPE user_status AS ENUM (
-  'ACTIVO',
-  'INACTIVO',
-  'SUSPENDIDO'
-);
+DO $$ BEGIN
+  CREATE TYPE user_role AS ENUM ('ADMIN', 'GERENTE', 'VENDEDOR', 'ALMACENERO', 'AUDITOR');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE document_type AS ENUM (
-  'DNI',
-  'RUC',
-  'PASAPORTE'
-);
+DO $$ BEGIN
+  CREATE TYPE user_status AS ENUM ('ACTIVO', 'INACTIVO', 'SUSPENDIDO');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE product_status AS ENUM (
-  'ACTIVO',
-  'INACTIVO',
-  'DESCONTINUADO'
-);
+DO $$ BEGIN
+  CREATE TYPE document_type AS ENUM ('DNI', 'RUC', 'NIT', 'PASAPORTE', 'CI');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE sale_status AS ENUM (
-  'PENDIENTE',
-  'COMPLETADA',
-  'CANCELADA',
-  'DEVUELTA'
-);
+DO $$ BEGIN
+  CREATE TYPE product_status AS ENUM ('ACTIVO', 'INACTIVO', 'DESCONTINUADO');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE payment_method AS ENUM (
-  'EFECTIVO',
-  'TARJETA_DEBITO',
-  'TARJETA_CREDITO',
-  'TRANSFERENCIA',
-  'CHEQUE'
-);
+DO $$ BEGIN
+  CREATE TYPE sale_status AS ENUM ('PENDIENTE', 'COMPLETADA', 'CANCELADA', 'DEVUELTA');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE purchase_status AS ENUM (
-  'PENDIENTE',
-  'RECIBIDA',
-  'DEVUELTA',
-  'CANCELADA'
-);
+DO $$ BEGIN
+  CREATE TYPE payment_method AS ENUM ('EFECTIVO', 'TARJETA_DEBITO', 'TARJETA_CREDITO', 'TRANSFERENCIA', 'CHEQUE', 'QR');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE purchase_status AS ENUM ('PENDIENTE', 'RECIBIDA', 'DEVUELTA', 'CANCELADA');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE estado_siat AS ENUM ('PENDIENTE', 'EMITIDA', 'ANULADA', 'RECHAZADA', 'OBSERVADA');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE canal_envio AS ENUM ('WHATSAPP', 'EMAIL', 'NINGUNO');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- ============================================================================
 -- TABLA: usuarios
--- Descripción: Gestión de usuarios y roles del sistema
 -- ============================================================================
-CREATE TABLE usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email VARCHAR(255) NOT NULL UNIQUE,
   nombre VARCHAR(255) NOT NULL,
   apellido VARCHAR(255) NOT NULL,
-  tipo_documento document_type NOT NULL,
+  tipo_documento document_type NOT NULL DEFAULT 'CI',
   numero_documento VARCHAR(20) NOT NULL UNIQUE,
   telefono VARCHAR(20),
   direccion TEXT,
@@ -82,9 +90,8 @@ CREATE TABLE usuarios (
 
 -- ============================================================================
 -- TABLA: categorias
--- Descripción: Categorías de productos
 -- ============================================================================
-CREATE TABLE categorias (
+CREATE TABLE IF NOT EXISTS categorias (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   nombre VARCHAR(255) NOT NULL UNIQUE,
   descripcion TEXT,
@@ -100,9 +107,8 @@ CREATE TABLE categorias (
 
 -- ============================================================================
 -- TABLA: productos
--- Descripción: Catálogo de productos de la ferretería
 -- ============================================================================
-CREATE TABLE productos (
+CREATE TABLE IF NOT EXISTS productos (
   id SERIAL PRIMARY KEY,
   codigo_producto VARCHAR(50) NOT NULL UNIQUE,
   nombre VARCHAR(255) NOT NULL,
@@ -131,12 +137,11 @@ CREATE TABLE productos (
 
 -- ============================================================================
 -- TABLA: proveedores
--- Descripción: Información de proveedores
 -- ============================================================================
-CREATE TABLE proveedores (
+CREATE TABLE IF NOT EXISTS proveedores (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   nombre VARCHAR(255) NOT NULL,
-  tipo_documento document_type NOT NULL,
+  tipo_documento document_type NOT NULL DEFAULT 'NIT',
   numero_documento VARCHAR(20) NOT NULL UNIQUE,
   contacto_nombre VARCHAR(255),
   contacto_telefono VARCHAR(20),
@@ -144,7 +149,7 @@ CREATE TABLE proveedores (
   direccion TEXT NOT NULL,
   ciudad VARCHAR(100),
   departamento VARCHAR(100),
-  pais VARCHAR(100) DEFAULT 'Perú',
+  pais VARCHAR(100) DEFAULT 'Bolivia',
   telefono VARCHAR(20),
   email VARCHAR(255),
   sitio_web VARCHAR(255),
@@ -163,9 +168,8 @@ CREATE TABLE proveedores (
 
 -- ============================================================================
 -- TABLA: compras
--- Descripción: Registro de compras a proveedores
 -- ============================================================================
-CREATE TABLE compras (
+CREATE TABLE IF NOT EXISTS compras (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   numero_compra VARCHAR(20) NOT NULL UNIQUE,
   proveedor_id UUID NOT NULL,
@@ -189,9 +193,8 @@ CREATE TABLE compras (
 
 -- ============================================================================
 -- TABLA: detalle_compras
--- Descripción: Ítems individuales de cada compra
 -- ============================================================================
-CREATE TABLE detalle_compras (
+CREATE TABLE IF NOT EXISTS detalle_compras (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   compra_id UUID NOT NULL,
   producto_id INT NOT NULL,
@@ -207,9 +210,8 @@ CREATE TABLE detalle_compras (
 
 -- ============================================================================
 -- TABLA: lotes
--- Descripción: Seguimiento de lotes de productos
 -- ============================================================================
-CREATE TABLE lotes (
+CREATE TABLE IF NOT EXISTS lotes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   numero_lote VARCHAR(100) NOT NULL UNIQUE,
   producto_id INT NOT NULL,
@@ -227,15 +229,15 @@ CREATE TABLE lotes (
 
 -- ============================================================================
 -- TABLA: ventas
--- Descripción: Registro de transacciones de venta
 -- ============================================================================
-CREATE TABLE ventas (
+CREATE TABLE IF NOT EXISTS ventas (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   numero_venta VARCHAR(20) NOT NULL UNIQUE,
   numero_comprobante VARCHAR(50),
   tipo_comprobante VARCHAR(20) DEFAULT 'FACTURA',
   cliente_nombre VARCHAR(255),
   cliente_documento VARCHAR(20),
+  cliente_telefono VARCHAR(20),
   fecha_venta TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   vendedor_id UUID NOT NULL,
   subtotal DECIMAL(12, 2) NOT NULL,
@@ -261,9 +263,8 @@ CREATE TABLE ventas (
 
 -- ============================================================================
 -- TABLA: detalle_ventas
--- Descripción: Ítems individuales de cada venta
 -- ============================================================================
-CREATE TABLE detalle_ventas (
+CREATE TABLE IF NOT EXISTS detalle_ventas (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   venta_id UUID NOT NULL,
   producto_id INT NOT NULL,
@@ -280,9 +281,8 @@ CREATE TABLE detalle_ventas (
 
 -- ============================================================================
 -- TABLA: caja
--- Descripción: Control de caja diaria
 -- ============================================================================
-CREATE TABLE caja (
+CREATE TABLE IF NOT EXISTS caja (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   numero_caja VARCHAR(20) NOT NULL UNIQUE,
   usuario_apertura UUID NOT NULL,
@@ -303,9 +303,8 @@ CREATE TABLE caja (
 
 -- ============================================================================
 -- TABLA: movimientos_caja
--- Descripción: Registro de todos los movimientos en caja
 -- ============================================================================
-CREATE TABLE movimientos_caja (
+CREATE TABLE IF NOT EXISTS movimientos_caja (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   caja_id UUID NOT NULL,
   tipo_movimiento VARCHAR(50) NOT NULL,
@@ -322,9 +321,8 @@ CREATE TABLE movimientos_caja (
 
 -- ============================================================================
 -- TABLA: alertas_inventario
--- Descripción: Alertas automáticas por stock bajo
 -- ============================================================================
-CREATE TABLE alertas_inventario (
+CREATE TABLE IF NOT EXISTS alertas_inventario (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   producto_id INT NOT NULL,
   tipo_alerta VARCHAR(50) NOT NULL,
@@ -339,9 +337,8 @@ CREATE TABLE alertas_inventario (
 
 -- ============================================================================
 -- TABLA: auditoria
--- Descripción: Log de cambios y acciones en el sistema
 -- ============================================================================
-CREATE TABLE auditoria (
+CREATE TABLE IF NOT EXISTS auditoria (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   usuario_id UUID NOT NULL,
   entidad VARCHAR(255) NOT NULL,
@@ -356,103 +353,53 @@ CREATE TABLE auditoria (
 );
 
 -- ============================================================================
--- ÍNDICES PARA OPTIMIZACIÓN
+-- TABLA: facturas (SIAT Bolivia)
 -- ============================================================================
-CREATE INDEX idx_usuarios_email ON usuarios(email);
-CREATE INDEX idx_usuarios_numero_documento ON usuarios(numero_documento);
-CREATE INDEX idx_usuarios_rol ON usuarios(rol);
-CREATE INDEX idx_usuarios_estado ON usuarios(estado);
-
-CREATE INDEX idx_categorias_slug ON categorias(slug);
-CREATE INDEX idx_categorias_estado ON categorias(estado);
-
-CREATE INDEX idx_productos_codigo ON productos(codigo_producto);
-CREATE INDEX idx_productos_categoria ON productos(categoria_id);
-CREATE INDEX idx_productos_estado ON productos(estado);
-CREATE INDEX idx_productos_stock ON productos(stock_actual, stock_minimo);
-CREATE INDEX idx_productos_codigo_barras ON productos(codigo_barras);
-
-CREATE INDEX idx_proveedores_numero_documento ON proveedores(numero_documento);
-CREATE INDEX idx_proveedores_estado ON proveedores(estado);
-
-CREATE INDEX idx_compras_proveedor ON compras(proveedor_id);
-CREATE INDEX idx_compras_estado ON compras(estado);
-CREATE INDEX idx_compras_fecha ON compras(fecha_compra);
-CREATE INDEX idx_compras_numero ON compras(numero_compra);
-
-CREATE INDEX idx_detalle_compras_compra ON detalle_compras(compra_id);
-CREATE INDEX idx_detalle_compras_producto ON detalle_compras(producto_id);
-
-CREATE INDEX idx_lotes_producto ON lotes(producto_id);
-CREATE INDEX idx_lotes_fecha_vencimiento ON lotes(fecha_vencimiento);
-CREATE INDEX idx_lotes_numero ON lotes(numero_lote);
-
-CREATE INDEX idx_ventas_vendedor ON ventas(vendedor_id);
-CREATE INDEX idx_ventas_estado ON ventas(estado);
-CREATE INDEX idx_ventas_fecha ON ventas(fecha_venta);
-CREATE INDEX idx_ventas_numero ON ventas(numero_venta);
-CREATE INDEX idx_ventas_cliente ON ventas(cliente_documento);
-
-CREATE INDEX idx_detalle_ventas_venta ON detalle_ventas(venta_id);
-CREATE INDEX idx_detalle_ventas_producto ON detalle_ventas(producto_id);
-CREATE INDEX idx_detalle_ventas_lote ON detalle_ventas(lote_id);
-
-CREATE INDEX idx_caja_usuario_apertura ON caja(usuario_apertura);
-CREATE INDEX idx_caja_estado ON caja(estado);
-CREATE INDEX idx_caja_fecha ON caja(fecha_apertura);
-
-CREATE INDEX idx_movimientos_caja_caja ON movimientos_caja(caja_id);
-CREATE INDEX idx_movimientos_caja_usuario ON movimientos_caja(usuario_id);
-CREATE INDEX idx_movimientos_caja_fecha ON movimientos_caja(fecha_creacion);
-
-CREATE INDEX idx_alertas_inventario_producto ON alertas_inventario(producto_id);
-CREATE INDEX idx_alertas_inventario_leida ON alertas_inventario(leida);
-
-CREATE INDEX idx_auditoria_usuario ON auditoria(usuario_id);
-CREATE INDEX idx_auditoria_entidad ON auditoria(entidad);
-CREATE INDEX idx_auditoria_fecha ON auditoria(fecha_creacion);
+CREATE TABLE IF NOT EXISTS facturas (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  venta_id UUID NOT NULL UNIQUE,
+  cuf VARCHAR(150),
+  cufd VARCHAR(150),
+  numero_factura BIGINT NOT NULL,
+  fecha_emision TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  codigo_control VARCHAR(50),
+  numero_autorizacion VARCHAR(100),
+  leyenda_siat TEXT,
+  estado_siat estado_siat NOT NULL DEFAULT 'PENDIENTE',
+  motivo_anulacion TEXT,
+  fecha_anulacion TIMESTAMPTZ,
+  actividad_economica VARCHAR(20) NOT NULL DEFAULT '477310',
+  punto_venta INT NOT NULL DEFAULT 0,
+  sucursal INT NOT NULL DEFAULT 0,
+  xml_content TEXT,
+  pdf_url VARCHAR(500),
+  enviada_cliente BOOLEAN NOT NULL DEFAULT false,
+  canal_envio canal_envio NOT NULL DEFAULT 'NINGUNO',
+  fecha_envio TIMESTAMPTZ,
+  destino_envio VARCHAR(255),
+  creado_por UUID,
+  fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fecha_actualizacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE RESTRICT,
+  FOREIGN KEY (creado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+);
 
 -- ============================================================================
--- CONSTRAINTS DE VALIDACIÓN
+-- ÍNDICES DE RENDIMIENTO
 -- ============================================================================
+CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
+CREATE INDEX IF NOT EXISTS idx_usuarios_numero_documento ON usuarios(numero_documento);
+CREATE INDEX IF NOT EXISTS idx_usuarios_rol ON usuarios(rol);
 
--- Validar que precio_venta >= precio_costo
-ALTER TABLE productos
-ADD CONSTRAINT chk_precio_venta_mayor_costo
-CHECK (precio_venta >= precio_costo);
+CREATE INDEX IF NOT EXISTS idx_categorias_slug ON categorias(slug);
 
--- Validar que stock_minimo < stock_maximo
-ALTER TABLE productos
-ADD CONSTRAINT chk_stock_minimo_maximo
-CHECK (stock_minimo <= stock_maximo);
+CREATE INDEX IF NOT EXISTS idx_productos_codigo ON productos(codigo_producto);
+CREATE INDEX IF NOT EXISTS idx_productos_categoria ON productos(categoria_id);
+CREATE INDEX IF NOT EXISTS idx_productos_stock ON productos(stock_actual, stock_minimo);
 
--- Validar que total >= subtotal (sin descuentos)
-ALTER TABLE compras
-ADD CONSTRAINT chk_total_compra
-CHECK (total >= (subtotal - COALESCE(descuento, 0)));
+CREATE INDEX IF NOT EXISTS idx_ventas_fecha ON ventas(fecha_venta);
+CREATE INDEX IF NOT EXISTS idx_ventas_numero ON ventas(numero_venta);
+CREATE INDEX IF NOT EXISTS idx_ventas_vendedor ON ventas(vendedor_id);
 
--- Validar que total >= subtotal en ventas
-ALTER TABLE ventas
-ADD CONSTRAINT chk_total_venta
-CHECK (total >= (subtotal - COALESCE(descuento_total, 0)));
-
-ALTER TABLE ventas
-ADD CONSTRAINT chk_monto_pagado
-CHECK (monto_pagado >= 0);
-
--- ============================================================================
--- COMENTARIOS DE DOCUMENTACIÓN
--- ============================================================================
-COMMENT ON TABLE usuarios IS 'Gestión de usuarios con roles y permisos del sistema';
-COMMENT ON TABLE categorias IS 'Categorización de productos para mejor organización';
-COMMENT ON TABLE productos IS 'Catálogo completo de productos con precios y stocks';
-COMMENT ON TABLE proveedores IS 'Información de proveedores y gestión de acreeduría';
-COMMENT ON TABLE compras IS 'Registro de compras a proveedores con trazabilidad';
-COMMENT ON TABLE detalle_compras IS 'Ítems detallados de cada compra realizada';
-COMMENT ON TABLE lotes IS 'Control de lotes para productos con vencimiento';
-COMMENT ON TABLE ventas IS 'Registro de todas las transacciones de venta';
-COMMENT ON TABLE detalle_ventas IS 'Ítems detallados de cada venta realizada';
-COMMENT ON TABLE caja IS 'Control de cajas diarias del punto de venta';
-COMMENT ON TABLE movimientos_caja IS 'Trazabilidad completa de movimientos en caja';
-COMMENT ON TABLE alertas_inventario IS 'Sistema automático de alertas por stock bajo';
-COMMENT ON TABLE auditoria IS 'Log de auditoría completo del sistema';
+CREATE INDEX IF NOT EXISTS idx_facturas_venta ON facturas(venta_id);
+CREATE INDEX IF NOT EXISTS idx_facturas_cuf ON facturas(cuf);

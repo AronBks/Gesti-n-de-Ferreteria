@@ -139,7 +139,7 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
       tap(response => {
         const token = response.access_token;
-        const user = response.user;
+        const user = response.user || (response as any).usuario;
 
         // Persistir en localStorage
         if (isPlatformBrowser(this.platformId)) {
